@@ -1,5 +1,6 @@
 
 package require speedtable
+package require BSD
 
 CTableBuildPath /usr/local/lib/speedtable_performance/stobj
 
@@ -14,25 +15,35 @@ speedtables Speedtable_performance 1.0 {
 
 package require Speedtable_performance
 
+namespace eval ::speedtable_performance {
+
 PerformanceLog create speedperformance
 
 #
-# speedtable_performance_callback - callback function when speedtable
+# callback - callback function when speedtable
 #   performance callbacks are enabled
 #
-proc speedtable_performance_callback {command count elapsedTime} {
+proc callback {command count elapsedTime} {
     array set frame [info frame [expr {[info frame] - 1}]]
 
     logger [format "performance - search at %s line %s returned %d rows and consumed %.6g CPU secs" $frame(file) $frame(line) $count $elapsedTime]
 }
 
 #
-# speedtable_performance_callback_all - maintain a table for each search
+# callback_all - maintain a table for each search
 #   (filename and line number) seen and accumulate the number of calls,
 #   number of rows returned and amount of CPU time incurred
 #
-proc speedtable_performance_callback_all {command count elapsedTime} {
+proc callback_all {command count elapsedTime} {
+    variable startCPU
+
     array set frame [info frame [expr {[info frame] - 1}]]
+
+    if {![info exists startCPU]} {
+	array set rusage [::bsd::rusage]
+
+	set startCPU $rusage(userTimeUsed)
+    }
 
     #logger [format "performance - search at %s line %s returned %d rows and consumed %.6g CPU secs" $frame(file) $frame(line) $count $elapsedTime]
 
@@ -48,18 +59,36 @@ proc speedtable_performance_callback_all {command count elapsedTime} {
 }
 
 #
-# speedtable_performance_report - emit a report for each speedtable search
+# report - emit a report for each speedtable search
 #   seen the filename, line number, number of invocations, total number of
 #   rows returned and the elapsed CPU time in seconds
 #
-proc speedtable_performance_report {} {
-    set report ""
-    speedperformance search -sort -et -array row -code {
-	append report [format "%6d %6d %.5g %s\n" $row(calls) $row(count) $row(et) [split $row(key) ":"]]
-    }
-    speedperformance reset
+proc report {} {
+    variable startCPU
 
-    return [string range $report 0 end-1]
+    if {![info exists startCPU]} {
+	return [list]
+    }
+
+    array set rusage [::bsd::rusage]
+    set endCPU $rusage(userTimeUsed)
+
+    set totalCPU [expr {$endCPU - $startCPU}]
+
+    set report [list]
+    speedperformance search -sort -et -array row -code {
+	lassign [split $row(key) ":"] file line
+	set where "[join [lrange [file split $file] end-1 end] "/"]:$line"
+	set propTotal [expr {$row(et) / $totalCPU}]
+	lappend report [list $row(calls) $row(count) $row(et) $propTotal $where]
+    }
+
+    speedperformance reset
+    unset startCPU
+
+    return $report
+}
+
 }
 
 package provide speedtable_performance 1.0
