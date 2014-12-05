@@ -34,14 +34,17 @@ proc speedtable_performance_callback {command count elapsedTime} {
 proc speedtable_performance_callback_all {command count elapsedTime} {
     array set frame [info frame [expr {[info frame] - 1}]]
 
+    #logger [format "performance - search at %s line %s returned %d rows and consumed %.6g CPU secs" $frame(file) $frame(line) $count $elapsedTime]
+
     set key $frame(file):$frame(line)
+    # make sure the row exists
+    speedperformance set $key
     array set row [speedperformance array_get $key]
     set row(et) [expr {$row(et) + $elapsedTime}]
     incr row(count) $count
     incr row(calls)
-    speedperformance array_set $key [array get row]
+    speedperformance set $key [array get row]
 
-    #logger [format "performance - search at %s line %s returned %d rows and consumed %.6g CPU secs" $frame(file) $frame(line) $count $elapsedTime]
 }
 
 #
@@ -50,9 +53,13 @@ proc speedtable_performance_callback_all {command count elapsedTime} {
 #   rows returned and the elapsed CPU time in seconds
 #
 proc speedtable_performance_report {} {
+    set report ""
     speedperformance search -sort -et -array row -code {
-	puts [format "%40s %6d %9d %.5g" [split $row(key) :] $row(calls) $row(count) $row(et)]
+	append report [format "%6d %6d %.5g %s\n" $row(calls) $row(count) $row(et) [split $row(key) ":"]]
     }
+    speedperformance reset
+
+    return [string range $report 0 end-1]
 }
 
 package provide speedtable_performance 1.0
