@@ -40,9 +40,9 @@ proc callback_all {command count elapsedTime} {
     array set frame [info frame [expr {[info frame] - 1}]]
 
     if {![info exists startCPU]} {
-	array set rusage [::bsd::rusage]
+		array set rusage [::bsd::rusage]
 
-	set startCPU $rusage(userTimeUsed)
+		set startCPU $rusage(userTimeUsed)
     }
 
     #logger [format "performance - search at %s line %s returned %d rows and consumed %.6g CPU secs" $frame(file) $frame(line) $count $elapsedTime]
@@ -67,7 +67,7 @@ proc report {} {
     variable startCPU
 
     if {![info exists startCPU]} {
-	return [list]
+		return [list]
     }
 
     array set rusage [::bsd::rusage]
@@ -77,10 +77,10 @@ proc report {} {
 
     set report [list]
     speedperformance search -sort -et -array row -code {
-	lassign [split $row(key) ":"] file line
-	set where "[join [lrange [file split $file] end-1 end] "/"]:$line"
-	set propTotal [expr {$row(et) / $totalCPU}]
-	lappend report [list $row(calls) $row(count) $row(et) $propTotal $where]
+		lassign [split $row(key) ":"] file line
+		set where "[join [lrange [file split $file] end-1 end] "/"]:$line"
+		set propTotal [expr {$row(et) / $totalCPU}]
+		lappend report [list $row(calls) $row(count) $row(et) $propTotal $where]
     }
 
     speedperformance reset
@@ -95,7 +95,7 @@ proc report {} {
 #
 proc register {tables minET callback} {
     foreach table $tables {
-	$table performance_callback $minET $callback
+		$table performance_callback $minET $callback
     }
 }
 
@@ -110,10 +110,10 @@ proc register {tables minET callback} {
 proc safe_register {tables minET callback} {
     set result 1
     foreach table $tables {
-	if {[catch {$table performance_callback $minET $callback} catchResult]} {
-	    fa_logger info "failed to register $table for performance callback: $catchResult, continuing..."
-	    set result 0
-	}
+		if {[catch {$table performance_callback $minET $callback} catchResult]} {
+			fa_logger info "failed to register $table for performance callback: $catchResult, continuing..."
+			set result 0
+		}
     }
     return $result
 }
@@ -121,3 +121,5 @@ proc safe_register {tables minET callback} {
 } ;# namespace ::speedtable_performance
 
 package provide speedtable_performance 1.0
+
+# vim: set ts=4 sw=4 sts=4 noet :
