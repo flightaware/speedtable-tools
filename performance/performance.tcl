@@ -89,6 +89,35 @@ proc report {} {
     return $report
 }
 
+#
+# register - register one or more tables for a performance callback to
+#  the specified routine if ET is above the specified threshold
+#
+proc register {tables minET callback} {
+    foreach table $tables {
+	$table performance_callback $minET $callback
+    }
 }
+
+#
+# safe_register - register one or more tables for a performance callback to
+#  the specified routine if ET is above the specified threshold
+#
+# don't error if any fail, just log and keep going
+#
+# return 1 if all tables registered successfully, 0 if one or more had a problem
+#
+proc safe_register {tables minET callback} {
+    set result 1
+    foreach table $tables {
+	if {[catch {$table performance_callback $minET $callback} catchResult]} {
+	    fa_logger info "failed to register $table for performance callback: $catchResult, continuing..."
+	    set result 0
+	}
+    }
+    return $result
+}
+
+} ;# namespace ::speedtable_performance
 
 package provide speedtable_performance 1.0
