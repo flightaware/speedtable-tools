@@ -1,6 +1,6 @@
 
 
-TCLSH=tclsh8.6
+TCLSH=tclsh
 
 TARGET=/usr/local/lib/speedtable_performance
 
