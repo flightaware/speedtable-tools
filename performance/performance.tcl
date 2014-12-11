@@ -93,7 +93,7 @@ proc report {} {
 # register - register one or more tables for a performance callback to
 #  the specified routine if ET is above the specified threshold
 #
-proc register {tables minET callback} {
+proc register {tables {minET 0.0} {callback ::speedtable_performance::callback_all}} {
     foreach table $tables {
 		$table performance_callback $minET $callback
     }
@@ -107,7 +107,7 @@ proc register {tables minET callback} {
 #
 # return 1 if all tables registered successfully, 0 if one or more had a problem
 #
-proc safe_register {tables minET callback} {
+proc safe_register {tables {minET 0.0} {callback ::speedtable_performance::callback_all}} {
     set result 1
     foreach table $tables {
 		if {[catch {$table performance_callback $minET $callback} catchResult]} {
