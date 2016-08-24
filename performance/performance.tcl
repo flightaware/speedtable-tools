@@ -46,10 +46,14 @@ proc callback_all {command count elapsedTime} {
     }
 
 	# proc may not come from a file... handle either way
-	if {![info exists frame(file)]} {
-		set key $frame(proc):$frame(line)
+	if {[info exists frame(file)]} {
+		set key "$frame(file):$frame(line)"
+	} elseif {[info exists frame(proc)]} {
+		set key "proc-$frame(proc):$frame(line)"
+	} elseif {[info exists frame(method)]} {
+		set key "method-$frame(method):$frame(line)"
 	} else {
-		set key $frame(file):$frame(line)
+		set key "unrecognized:$frame(line)"
 	}
 
     # make sure the row exists
