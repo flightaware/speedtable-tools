@@ -45,9 +45,13 @@ proc callback_all {command count elapsedTime} {
 		set startCPU $rusage(userTimeUsed)
     }
 
-    #logger [format "performance - search at %s line %s returned %d rows and consumed %.6g CPU secs" $frame(file) $frame(line) $count $elapsedTime]
+	# proc may not come from a file... handle either way
+	if {![info exists frame(file)]} {
+		set key $frame(proc):$frame(line)
+	} else {
+		set key $frame(file):$frame(line)
+	}
 
-    set key $frame(file):$frame(line)
     # make sure the row exists
     speedperformance set $key
     array set row [speedperformance array_get $key]
